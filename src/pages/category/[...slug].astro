@@ -1,0 +1,421 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { buildNavigationTree, generateBreadcrumbsForCategory, findPostInTree } from '../../utils/navigationUtils';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+
+export async function getStaticPaths() {
+  const navigationTree = await buildNavigationTree();
+  const paths: { params: { slug: string }, props: any }[] = [];
+  
+  function collectFolderPaths(items: any[], currentPath = '') {
+    for (const item of items) {
+      if (item.type === 'folder') {
+        const folderPath = currentPath ? `${currentPath}/${item.path.split('/').pop()}` : item.path;
+        paths.push({
+          params: { slug: folderPath },
+          props: { folder: item, path: folderPath }
+        });
+        
+        if (item.children) {
+          collectFolderPaths(item.children, folderPath);
+        }
+      }
+    }
+  }
+  
+  collectFolderPaths(navigationTree);
+  return paths;
+}
+
+const { folder, path } = Astro.props;
+const breadcrumbs = generateBreadcrumbsForCategory(path);
+
+// Count total articles in this folder and subfolders
+function countArticles(items: any[]): number {
+  return items.reduce((count, item) => {
+    if (item.type === 'file') return count + 1;
+    if (item.children) return count + countArticles(item.children);
+    return count;
+  }, 0);
+}
+
+const totalArticles = countArticles(folder.children || []);
+const directFiles = folder.children?.filter((item: any) => item.type === 'file') || [];
+const subfolders = folder.children?.filter((item: any) => item.type === 'folder') || [];
+---
+
+<Layout title={`${folder.title} - Category`}>
+  <main class="category-page">
+    <div class="container">
+      <div class="content-area">
+        <Breadcrumbs breadcrumbs={breadcrumbs} />
+        
+        <header class="category-header">
+          <div class="category-icon">
+            <svg width="32" height="32" viewBox="0 0 48 48" fill="none" class="sm:w-12 sm:h-12">
+              <path d="M6 9C6 7.34315 7.34315 6 9 6H19.7574C20.553 6 21.3161 6.31607 21.8787 6.87868L25.1213 10.1213C25.6839 10.6839 26.447 11 27.2426 11H39C40.6569 11 42 12.3431 42 14V36C42 37.6569 40.6569 39 39 39H9C7.34315 39 6 37.6569 6 36V9Z" stroke="currentColor" stroke-width="3" fill="none"/>
+            </svg>
+          </div>
+          <h1>{folder.title}</h1>
+          <p class="category-stats">
+            {totalArticles} {totalArticles === 1 ? 'article' : 'articles'} 
+            {subfolders.length > 0 && ` • ${subfolders.length} ${subfolders.length === 1 ? 'subcategory' : 'subcategories'}`}
+          </p>
+        </header>
+
+        <div class="category-content">
+          {subfolders.length > 0 && (
+            <section class="subfolders-section">
+              <h2>Subcategories</h2>
+              <div class="subfolders-grid">
+                {subfolders.map((subfolder: any) => (
+                  <a href={`/category/${path}/${subfolder.path.split('/').pop()}`} class="subfolder-card">
+                    <div class="subfolder-icon">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="sm:w-6 sm:h-6">
+                        <path d="M3 4.5C3 3.67157 3.67157 3 4.5 3H9.87868C10.2765 3 10.658 3.15804 10.9393 3.43934L12.5607 5.06066C12.842 5.34196 13.2235 5.5 13.6213 5.5H19.5C20.3284 5.5 21 6.17157 21 7V18C21 18.8284 20.3284 19.5 19.5 19.5H4.5C3.67157 19.5 3 18.8284 3 18V4.5Z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                      </svg>
+                    </div>
+                    <div class="subfolder-info">
+                      <h3>{subfolder.title}</h3>
+                      <p>{countArticles(subfolder.children || [])} {countArticles(subfolder.children || []) === 1 ? 'article' : 'articles'}</p>
+                    </div>
+                    <div class="subfolder-arrow">
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" class="sm:w-4 sm:h-4">
+                        <path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {directFiles.length > 0 && (
+            <section class="articles-section">
+              <h2>Articles</h2>
+              <div class="articles-list">
+                {directFiles.map((file: any) => (
+                  <a href={`/posts/${file.path}`} class="article-card">
+                    <div class="article-icon">
+                      <svg width="16" height="16" viewBox="0 0 20 20" fill="none" class="sm:w-5 sm:h-5">
+                        <path d="M4 2.5C4 1.94772 4.44772 1.5 5 1.5H11.5L16 6V17.5C16 18.0523 15.5523 18.5 15 18.5H5C4.44772 18.5 4 18.0523 4 17.5V2.5Z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                        <path d="M11.5 1.5V6H16" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                      </svg>
+                    </div>
+                    <div class="article-info">
+                      <h3>{file.title}</h3>
+                    </div>
+                    <div class="article-arrow">
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" class="sm:w-4 sm:h-4">
+                        <path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {directFiles.length === 0 && subfolders.length === 0 && (
+            <div class="empty-state">
+              <div class="empty-icon">
+                <svg width="48" height="48" viewBox="0 0 64 64" fill="none" class="sm:w-16 sm:h-16">
+                  <path d="M8 12C8 9.79086 9.79086 8 12 8H26.3431C27.404 8 28.4214 8.42143 29.1716 9.17157L33.8284 13.8284C34.5786 14.5786 35.596 15 36.6569 15H52C54.2091 15 56 16.7909 56 19V48C56 50.2091 54.2091 52 52 52H12C9.79086 52 8 50.2091 8 48V12Z" stroke="currentColor" stroke-width="2" fill="none"/>
+                  <circle cx="32" cy="32" r="3" fill="currentColor"/>
+                  <circle cx="24" cy="32" r="1" fill="currentColor"/>
+                  <circle cx="40" cy="32" r="1" fill="currentColor"/>
+                </svg>
+              </div>
+              <h3>This category is empty</h3>
+              <p>No articles or subcategories have been added to this section yet.</p>
+              <a href="/posts" class="back-link">← Browse all categories</a>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<style>
+  .category-page {
+    min-height: 100vh;
+    padding: 1rem 0;
+  }
+
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+
+  .content-area {
+    background: #2a2a2a;
+    border-radius: 8px;
+    border: 1px solid #404040;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+  }
+
+  .category-header {
+    padding: 2rem 1.5rem;
+    text-align: center;
+    border-bottom: 1px solid #404040;
+  }
+
+  .category-icon {
+    margin-bottom: 1rem;
+    color: #cccccc;
+    display: flex;
+    justify-content: center;
+  }
+
+  .category-header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 1rem 0;
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1.2;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .category-stats {
+    font-size: 0.875rem;
+    color: #888888;
+    margin: 0;
+  }
+
+  .category-content {
+    padding: 1.5rem;
+  }
+
+  .subfolders-section,
+  .articles-section {
+    margin-bottom: 2rem;
+  }
+
+  .subfolders-section:last-child,
+  .articles-section:last-child {
+    margin-bottom: 0;
+  }
+
+  .subfolders-section h2,
+  .articles-section h2 {
+    color: #ffffff;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .subfolders-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .subfolder-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: #333333;
+    border: 1px solid #404040;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .subfolder-card:hover {
+    background: #3a3a3a;
+    border-color: #555555;
+    transform: translateY(-1px);
+  }
+
+  .subfolder-icon {
+    color: #cccccc;
+    display: flex;
+    align-items: center;
+  }
+
+  .subfolder-info {
+    flex: 1;
+  }
+
+  .subfolder-info h3 {
+    color: #ffffff;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem 0;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .subfolder-info p {
+    color: #888888;
+    font-size: 0.75rem;
+    margin: 0;
+  }
+
+  .subfolder-arrow {
+    color: #666666;
+    display: flex;
+    align-items: center;
+  }
+
+  .articles-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .article-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: #333333;
+    border: 1px solid #404040;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .article-card:hover {
+    background: #3a3a3a;
+    border-color: #555555;
+    transform: translateY(-1px);
+  }
+
+  .article-icon {
+    color: #cccccc;
+    display: flex;
+    align-items: center;
+  }
+
+  .article-info {
+    flex: 1;
+  }
+
+  .article-info h3 {
+    color: #ffffff;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin: 0;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .article-arrow {
+    color: #666666;
+    display: flex;
+    align-items: center;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+  }
+
+  .empty-icon {
+    margin-bottom: 1rem;
+    color: #666666;
+    display: flex;
+    justify-content: center;
+  }
+
+  .empty-state h3 {
+    color: #ffffff;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0 0 0.75rem 0;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .empty-state p {
+    color: #888888;
+    font-size: 0.875rem;
+    margin: 0 0 1.5rem 0;
+    line-height: 1.6;
+  }
+
+  .back-link {
+    color: #cccccc;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+  }
+
+  .back-link:hover {
+    color: #ffffff;
+  }
+
+  /* Tablet and larger screens */
+  @media (min-width: 768px) {
+    .category-page {
+      padding: 1.5rem 0;
+    }
+
+    .container {
+      padding: 0 1.5rem;
+    }
+
+    .category-header {
+      padding: 3rem;
+    }
+
+    .category-header h1 {
+      font-size: 2.625rem;
+    }
+
+    .category-stats {
+      font-size: 1rem;
+    }
+
+    .category-content {
+      padding: 3rem;
+    }
+
+    .subfolders-section h2,
+    .articles-section h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .subfolders-grid {
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+
+    .subfolder-card,
+    .article-card {
+      padding: 1.25rem;
+      gap: 1rem;
+    }
+
+    .subfolder-info h3,
+    .article-info h3 {
+      font-size: 1.125rem;
+    }
+
+    .subfolder-info p {
+      font-size: 0.875rem;
+    }
+
+    .articles-list {
+      gap: 0.75rem;
+    }
+
+    .empty-state {
+      padding: 4rem 2rem;
+    }
+
+    .empty-state h3 {
+      font-size: 1.5rem;
+    }
+
+    .empty-state p {
+      font-size: 1rem;
+    }
+  }
+</style>
+</Layout>

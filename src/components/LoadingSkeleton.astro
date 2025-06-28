@@ -1,0 +1,16 @@
+---
+interface Props {
+  lines?: number;
+}
+
+const { lines = 5 } = Astro.props;
+---
+
+<div class="p-4">
+  {Array.from({ length: lines }, (_, i) => (
+    <div 
+      class="h-4 bg-gradient-to-r from-dark-800 via-dark-700 to-dark-800 bg-[length:200%_100%] animate-loading rounded mb-2 last:mb-0"
+      style={`width: ${Math.random() * 40 + 60}%`}
+    ></div>
+  ))}
+</div>

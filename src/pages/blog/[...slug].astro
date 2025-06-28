@@ -1,0 +1,278 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+import { formatDate } from '../../utils/formatDate';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: post,
+  }));
+}
+
+const post = Astro.props;
+const { Content } = await post.render();
+---
+
+<Layout title={post.data.title}>
+  <main class="blog-post">
+    <div class="container">
+      <article class="post-article">
+        <header class="post-header">
+          <div class="back-to-blog">
+            <a href="/blog">← Back to All Posts</a>
+          </div>
+          <div class="post-meta">
+            <time datetime={post.data.pubDate.toISOString()}>
+              {formatDate(post.data.pubDate)}
+            </time>
+            <span class="post-author">by {post.data.author}</span>
+          </div>
+          <h1>{post.data.title}</h1>
+          <p class="post-description">{post.data.description}</p>
+          <div class="post-tags">
+            {post.data.tags.map((tag) => (
+              <span class="tag">{tag}</span>
+            ))}
+          </div>
+        </header>
+
+        <div class="post-content">
+          <Content />
+        </div>
+      </article>
+    </div>
+  </main>
+</Layout>
+
+<style>
+  .blog-post {
+    min-height: 100vh;
+    padding: 48px 0;
+  }
+
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  .post-article {
+    background: #2a2a2a;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    border: 1px solid #404040;
+  }
+
+  .post-header {
+    padding: 32px 48px;
+    border-bottom: 1px solid #404040;
+  }
+
+  .back-to-blog {
+    margin-bottom: 24px;
+  }
+
+  .back-to-blog a {
+    color: #888888;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    transition: color 0.2s ease;
+  }
+
+  .back-to-blog a:hover {
+    color: #cccccc;
+  }
+
+  .post-meta {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: #888888;
+  }
+
+  .post-header h1 {
+    font-size: 42px;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 16px 0;
+    font-family: system-ui, -apple-system, sans-serif;
+    line-height: 1.2;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .post-description {
+    font-size: 18px;
+    line-height: 1.6;
+    color: #cccccc;
+    margin: 0 0 24px 0;
+  }
+
+  .post-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    background: #404040;
+    color: #cccccc;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .post-content {
+    padding: 48px;
+    line-height: 1.8;
+    font-size: 16px;
+    color: #ffffff;
+  }
+
+  .post-content :global(h1) {
+    font-size: 32px;
+    font-weight: 600;
+    color: #ffffff;
+    margin: 32px 0 16px 0;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+
+  .post-content :global(h2) {
+    font-size: 26px;
+    font-weight: 600;
+    color: #ffffff;
+    margin: 28px 0 14px 0;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+
+  .post-content :global(h3) {
+    font-size: 22px;
+    font-weight: 600;
+    color: #ffffff;
+    margin: 24px 0 12px 0;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+
+  .post-content :global(h4) {
+    font-size: 20px;
+    font-weight: 600;
+    color: #ffffff;
+    margin: 20px 0 10px 0;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+
+  .post-content :global(p) {
+    margin: 0 0 24px 0;
+    color: #cccccc;
+  }
+
+  .post-content :global(ul),
+  .post-content :global(ol) {
+    padding-left: 24px;
+    margin: 0 0 24px 0;
+  }
+
+  .post-content :global(li) {
+    margin-bottom: 8px;
+    color: #cccccc;
+  }
+
+  .post-content :global(blockquote) {
+    border-left: 4px solid #555555;
+    padding-left: 24px;
+    margin: 32px 0;
+    color: #888888;
+    font-style: italic;
+  }
+
+  .post-content :global(code) {
+    background: #404040;
+    color: #ffffff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Monaco', 'Menlo', monospace;
+    font-size: 14px;
+  }
+
+  .post-content :global(pre) {
+    background: #1a1a1a;
+    color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 24px 0;
+    border: 1px solid #404040;
+  }
+
+  .post-content :global(pre code) {
+    background: none;
+    padding: 0;
+    font-size: 14px;
+  }
+
+  .post-content :global(strong) {
+    color: #ffffff;
+    font-weight: 600;
+  }
+
+  .post-content :global(em) {
+    color: #cccccc;
+    font-style: italic;
+  }
+
+  .post-content :global(a) {
+    color: #ffffff;
+    text-decoration: underline;
+    transition: color 0.2s ease;
+  }
+
+  .post-content :global(a:hover) {
+    color: #cccccc;
+  }
+
+  @media (max-width: 768px) {
+    .container {
+      padding: 0 16px;
+    }
+
+    .post-header {
+      padding: 24px;
+    }
+
+    .post-header h1 {
+      font-size: 28px;
+    }
+
+    .post-description {
+      font-size: 16px;
+    }
+
+    .post-content {
+      padding: 32px 24px;
+      font-size: 15px;
+    }
+
+    .post-content :global(h1) {
+      font-size: 26px;
+    }
+
+    .post-content :global(h2) {
+      font-size: 22px;
+    }
+
+    .post-content :global(h3) {
+      font-size: 18px;
+    }
+
+    .post-content :global(h4) {
+      font-size: 16px;
+    }
+  }
+</style>
+</Layout>

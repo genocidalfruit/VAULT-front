@@ -1,0 +1,25 @@
+---
+import Layout from '../layouts/Layout.astro';
+import BlogIndex from '../components/BlogIndex.astro';
+---
+
+<Layout title="Personal Blog - Thoughts & Stories">
+  <main class="min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-24">
+      <div class="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8 lg:gap-16 items-center">
+        <!-- Knowledge Base Title -->
+        <div class="order-1 lg:order-1">
+          <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white m-0 font-mono leading-[0.9] tracking-tighter drop-shadow-2xl">
+            My Knowledge<br>
+            <span class="text-dark-300 font-light">Base</span>
+          </h1>
+        </div>
+        
+        <!-- Card -->
+        <div class="order-2 lg:order-2 flex justify-center lg:justify-end mt-12 lg:mt-0">
+          <BlogIndex />
+        </div>
+      </div>
+    </div>
+  </main>
+</Layout>

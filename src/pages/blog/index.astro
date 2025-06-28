@@ -1,0 +1,154 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+import { formatDate } from '../../utils/formatDate';
+
+const allPosts = await getCollection('blog');
+const sortedPosts = allPosts.sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
+---
+
+<Layout title="All Blog Posts">
+  <main class="blog-page">
+    <div class="container">
+      <header class="blog-header">
+        <h1>All Posts</h1>
+        <div class="back-home">
+          <a href="/">← Back to Home</a>
+        </div>
+      </header>
+
+      <div class="posts-container">
+        <div class="posts-list">
+          {sortedPosts.map((post) => (
+            <div class="post-item">
+              <a href={`/blog/${post.slug}`} class="post-link">
+                <h2 class="post-title">{post.data.title}</h2>
+                <time class="post-date" datetime={post.data.pubDate.toISOString()}>
+                  {formatDate(post.data.pubDate)}
+                </time>
+              </a>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<style>
+  .blog-page {
+    min-height: 100vh;
+    padding: 48px 0;
+  }
+
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  .blog-header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .blog-header h1 {
+    font-size: 48px;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 24px 0;
+    font-family: system-ui, -apple-system, sans-serif;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .back-home a {
+    color: #888888;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    transition: color 0.2s ease;
+  }
+
+  .back-home a:hover {
+    color: #cccccc;
+  }
+
+  .posts-container {
+    background: #2a2a2a;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    border: 1px solid #404040;
+    overflow: hidden;
+  }
+
+  .posts-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .post-item {
+    border-bottom: 1px solid #404040;
+  }
+
+  .post-item:last-child {
+    border-bottom: none;
+  }
+
+  .post-link {
+    display: block;
+    padding: 20px 24px;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+  }
+
+  .post-link:hover {
+    background-color: #333333;
+  }
+
+  .post-title {
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    font-family: system-ui, -apple-system, sans-serif;
+    line-height: 1.4;
+    transition: color 0.2s ease;
+  }
+
+  .post-link:hover .post-title {
+    color: #cccccc;
+  }
+
+  .post-date {
+    color: #888888;
+    font-size: 14px;
+    font-weight: 400;
+  }
+
+  @media (max-width: 768px) {
+    .container {
+      padding: 0 16px;
+    }
+
+    .blog-header {
+      margin-bottom: 32px;
+    }
+
+    .blog-header h1 {
+      font-size: 36px;
+    }
+
+    .post-link {
+      padding: 16px 20px;
+    }
+
+    .post-title {
+      font-size: 16px;
+    }
+
+    .post-date {
+      font-size: 13px;
+    }
+  }
+</style>
+</Layout>
