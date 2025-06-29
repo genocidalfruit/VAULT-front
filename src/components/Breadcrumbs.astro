@@ -9,7 +9,7 @@ const { breadcrumbs } = Astro.props;
 ---
 
 <nav class="mb-6 py-3 border-b border-dark-700" aria-label="Breadcrumb navigation">
-  <ol class="flex items-center flex-wrap gap-2 list-none m-0 p-0 text-sm">
+  <ol class="flex items-center flex-wrap gap-2 list-none ml-5 p-0 text-sm">
     {breadcrumbs.map((item, index) => (
       <li class="flex items-center gap-2">
         {index < breadcrumbs.length - 1 ? (
