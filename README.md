@@ -52,4 +52,4 @@ Content from THE-VAULT is automatically placed in `./src/content/posts/` and can
 
 ## 🌐 Live Site
 
-Visit the live knowledge base at: [Your deployed URL here]
+Visit the live knowledge base at: (https://vault-front.netlify.app/)
